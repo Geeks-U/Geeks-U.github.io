@@ -47,8 +47,8 @@ import {
   fetchUserRepoTopics,
   fetchReposByAllTopics,
   fetchReposByAnyTopic,
-} from './services/github'
-import type { RepoWithTopics } from './services/github'
+} from '@/services/github'
+import type { RepoWithTopics } from '@/services/github'
 
 const topics = ref<string[]>([])
 const selectedTopics = ref<string[]>([])

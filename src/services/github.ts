@@ -1,4 +1,4 @@
-import githubAxios from "../utils/request";
+import githubAxios from "@/utils/request";
 
 type Repo = { name: string };
 
