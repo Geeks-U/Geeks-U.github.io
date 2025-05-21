@@ -7,10 +7,19 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependency directories
 node_modules
+
+# Build output directories
 dist
 dist-ssr
-*.local
+
+# Local env files (开发环境敏感信息，不提交)
+.env.development
+.env.local
+
+# 生产环境配置文件允许提交
+# .env.production
 
 # Editor directories and files
 .vscode/*
