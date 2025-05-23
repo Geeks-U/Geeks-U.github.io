@@ -70,7 +70,12 @@ const fetchUserRepoTopics = (): Promise<string[]> => {
 
 type RepoWithTopics = Repo & { 
   topics: string[],
-  description?: string | null  // 允许没有描述
+  description?: string | null,  // 允许没有描述
+  stargazers_count?: number,
+  watchers_count?: number,
+  forks_count?: number,
+  language?: string | null,
+  html_url?: string | null
 };
 
 // 根据所有 topics 匹配仓库，不接受 username 参数，内部用 USERNAME

@@ -3,7 +3,11 @@
 </script>
 
 <template>
-  <router-view></router-view>
+  <div>
+    首页展示
+  </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>
