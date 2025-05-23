@@ -74,33 +74,46 @@ const isActive = (path: string) => route.path === path
 
 .nav {
   display: flex;
+  width: 100%;
+  justify-content: center;
 }
 
 .nav-list {
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
 .nav-link {
-  color: #1f2937;
+  color: #4b5563;
   text-decoration: none;
   font-weight: 500;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.25rem;
-  transition: all 0.2s ease;
+  font-size: 1.1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .nav-link:hover {
   color: #2563eb;
-  background-color: rgba(37, 99, 235, 0.1);
 }
 
 .nav-link.active {
   color: #2563eb;
-  background-color: rgba(37, 99, 235, 0.1);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #2563eb;
+  border-radius: 2px;
 }
 
 .main {
@@ -130,8 +143,14 @@ const isActive = (path: string) => route.path === path
   }
 
   .nav-list {
+    gap: 1rem;
     flex-wrap: wrap;
     justify-content: center;
+  }
+
+  .nav-link {
+    font-size: 1rem;
+    padding: 0.4rem 0.8rem;
   }
 
   .footer-content {
