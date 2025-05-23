@@ -1,21 +1,40 @@
 <script lang="ts" setup>
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
+const isActive = (path: string) => route.path === path
 </script>
 
 <template>
   <div class="layout">
     <header class="header">
       <div class="header-content container">
-        <nav class="nav">
-          <router-link to="/layout" class="nav-link">首页</router-link>
-          <router-link to="/layout/repos" class="nav-link">仓库</router-link>
-          <router-link to="/layout/about" class="nav-link">关于</router-link>
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav-list">
+            <li>
+              <router-link :to="'/layout'" :class="['nav-link', isActive('/layout') && 'active']">
+                首页
+              </router-link>
+            </li>
+            <li>
+              <router-link :to="'/layout/repos'" :class="['nav-link', isActive('/layout/repos') && 'active']">
+                仓库
+              </router-link>
+            </li>
+            <li>
+              <router-link :to="'/layout/about'" :class="['nav-link', isActive('/layout/blog') && 'active']">
+                博客
+              </router-link>
+            </li>
+          </ul>
         </nav>
       </div>
     </header>
-    <main class="main container">
-      <router-view></router-view>
+
+    <main class="main container" aria-label="主要内容区域">
+      <router-view />
     </main>
+
     <footer class="footer">
       <div class="footer-content container">
         <p>© 2024 GitHub Home. All rights reserved.</p>
@@ -31,13 +50,20 @@
   flex-direction: column;
 }
 
+.container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
 .header {
-  background-color: #fff;
+  background-color: #ffffff;
   border-bottom: 1px solid #e5e7eb;
   padding: 1rem 0;
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .header-content {
@@ -48,7 +74,14 @@
 
 .nav {
   display: flex;
+}
+
+.nav-list {
+  display: flex;
   gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .nav-link {
@@ -76,10 +109,11 @@
 }
 
 .footer {
-  background-color: #fff;
+  background-color: #ffffff;
   border-top: 1px solid #e5e7eb;
   padding: 1.5rem 0;
   margin-top: auto;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .footer-content {
@@ -95,7 +129,7 @@
     gap: 1rem;
   }
 
-  .nav {
+  .nav-list {
     flex-wrap: wrap;
     justify-content: center;
   }

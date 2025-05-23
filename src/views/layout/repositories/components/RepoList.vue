@@ -1,257 +1,135 @@
 <template>
-  <div class="repo-container">
-    <template v-if="isLoading">
-      <div class="loading-placeholder">
-        <div class="loading-spinner"></div>
-        <span>正在加载仓库...</span>
-      </div>
-    </template>
-    <template v-else-if="repos.length">
-      <div v-for="repo in repos" :key="repo.name" class="repo-card">
-        <header class="repo-header">
-          <h3 class="repo-title" @click="openRepo(repo.html_url)" role="button">
+  <div class="repo-list">
+    <div v-if="isLoading" class="loading">
+      Loading repositories...
+    </div>
+    <div v-else-if="repos.length === 0" class="empty">
+      No repositories found
+    </div>
+    <div v-else class="repos-grid">
+      <div 
+        v-for="repo in repos" 
+        :key="repo.id"
+        class="repo-card"
+      >
+        <h3 class="repo-name">
+          <a :href="repo.html_url" target="_blank" rel="noopener">
             {{ repo.name }}
-            <span class="external-link-icon">↗</span>
-          </h3>
-          <p class="repo-description">{{ repo.description || '无描述' }}</p>
-        </header>
-        <div class="repo-stats">
-          <div class="repo-stat">
-            <span class="stat-icon">⭐</span>
-            <span>{{ repo.stargazers_count || 0 }}</span>
-          </div>
-          <div class="repo-stat">
-            <span class="stat-icon">👁️</span>
-            <span>{{ repo.watchers_count || 0 }}</span>
-          </div>
-          <div class="repo-stat">
-            <span class="stat-icon">🍴</span>
-            <span>{{ repo.forks_count || 0 }}</span>
-          </div>
+          </a>
+        </h3>
+        <p class="repo-description">{{ repo.description || 'No description' }}</p>
+        <div class="repo-topics">
+          <span 
+            v-for="topic in repo.topics" 
+            :key="topic"
+            class="topic-tag"
+          >
+            {{ topic }}
+          </span>
         </div>
-        <footer class="repo-footer">
-          <div class="repo-language">
-            <span class="language-dot"></span>
-            <span>{{ repo.language || 'Unknown' }}</span>
-          </div>
-          <div class="repo-topics">
-            <span v-for="topic in repo.topics" :key="topic" class="repo-topic">
-              {{ topic }}
-            </span>
-          </div>
-        </footer>
+        <div class="repo-stats">
+          <span class="stat">
+            <i class="fas fa-star"></i>
+            {{ repo.stargazers_count }}
+          </span>
+          <span class="stat">
+            <i class="fas fa-code-branch"></i>
+            {{ repo.forks_count }}
+          </span>
+        </div>
       </div>
-    </template>
-    <template v-else>
-      <div class="empty-placeholder">
-        <span>请选择标签进行筛选</span>
-      </div>
-    </template>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import type { RepoWithTopics } from '@/services/github'
+import type { RepoWithTopics } from '@/services/repositories'
 
 defineProps<{
   repos: RepoWithTopics[]
-  isLoading?: boolean
+  isLoading: boolean
 }>()
-
-const openRepo = (url: string | null | undefined) => {
-  if (url) {
-    window.open(url, '_blank')
-  }
-}
 </script>
 
 <style scoped>
-.repo-container {
+.repo-list {
+  min-height: 200px;
+}
+
+.loading, .empty {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-secondary);
+}
+
+.repos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-  padding: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-md);
 }
 
 .repo-card {
-  background-color: var(--background-color);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid var(--border-color);
+  background: var(--color-bg-secondary);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  transition: transform 0.2s;
 }
 
 .repo-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
-.repo-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
+.repo-name {
+  margin: 0 0 var(--spacing-sm);
 }
 
-.repo-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-color);
-  margin-bottom: 0.75rem;
-  line-height: 1.4;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: color 0.2s ease;
+.repo-name a {
+  color: var(--color-primary);
+  text-decoration: none;
 }
 
-.repo-title:hover {
-  color: var(--primary-color);
-}
-
-.external-link-icon {
-  font-size: 0.875rem;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.repo-title:hover .external-link-icon {
-  opacity: 1;
+.repo-name a:hover {
+  text-decoration: underline;
 }
 
 .repo-description {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  line-height: 1.6;
-  margin-bottom: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.repo-stats {
-  padding: 1rem 1.5rem;
-  display: flex;
-  gap: 1.25rem;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  border-bottom: 1px solid var(--border-color);
-  background-color: rgba(0, 0, 0, 0.02);
-}
-
-.repo-stat {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: transform 0.2s ease;
-}
-
-.repo-stat:hover {
-  transform: scale(1.05);
-}
-
-.stat-icon {
-  font-size: 1rem;
-  opacity: 0.8;
-}
-
-.repo-footer {
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.repo-language {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-}
-
-.language-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+  font-size: 0.9em;
+  line-height: 1.4;
 }
 
 .repo-topics {
   display: flex;
-  gap: 0.5rem;
   flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
 }
 
-.repo-topic {
-  background-color: rgba(37, 99, 235, 0.08);
-  color: var(--primary-color);
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+.topic-tag {
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
 }
 
-.repo-topic:hover {
-  background-color: rgba(37, 99, 235, 0.12);
-  transform: translateY(-1px);
-}
-
-.loading-placeholder {
-  grid-column: 1 / -1;
+.repo-stats {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  color: #6b7280;
-  gap: 16px;
+  gap: var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: 0.9em;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #2563eb;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.empty-placeholder {
-  grid-column: 1 / -1;
+.stat {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 40px;
-  color: #6b7280;
-  font-size: 1.1rem;
+  gap: 4px;
 }
 
 @media (max-width: 768px) {
-  .repo-container {
+  .repos-grid {
     grid-template-columns: 1fr;
-    padding: 0.75rem;
-  }
-
-  .repo-footer {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-
-  .repo-stats {
-    flex-wrap: wrap;
-    gap: 1rem;
   }
 }
 </style> 

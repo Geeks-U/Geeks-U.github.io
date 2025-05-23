@@ -21,8 +21,8 @@ import {
   fetchUserRepoTopics,
   fetchReposByAllTopics,
   fetchReposByAnyTopic,
-} from '@/services/github'
-import type { RepoWithTopics } from '@/services/github'
+} from '@/services/repositories'
+import type { RepoWithTopics } from '@/services/repositories'
 import RepoFilters from './components/RepoFilters.vue'
 import RepoList from './components/RepoList.vue'
 

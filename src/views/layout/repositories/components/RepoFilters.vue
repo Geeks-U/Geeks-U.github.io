@@ -1,42 +1,42 @@
 <template>
   <div class="repo-filters">
-    <div class="filter-mode">
-      <label class="filter-label">
-        <input type="radio" value="any" v-model="filterMode" />
-        任意-匹配 (any)
-      </label>
-      <label class="filter-label">
-        <input type="radio" value="all" v-model="filterMode" />
-        全部-匹配 (all)
-      </label>
+    <div class="filter-header">
+      <h3>Topics</h3>
+      <div class="filter-mode">
+        <button 
+          :class="{ active: mode === 'any' }"
+          @click="mode = 'any'"
+        >
+          Any
+        </button>
+        <button 
+          :class="{ active: mode === 'all' }"
+          @click="mode = 'all'"
+        >
+          All
+        </button>
+      </div>
     </div>
-
-    <div class="topics-grid">
-      <template v-if="isLoading">
-        <div class="loading-placeholder">
-          <div class="loading-spinner"></div>
-          <span>正在加载标签...</span>
-        </div>
-      </template>
-      <template v-else>
-        <label v-for="topic in topics" :key="topic" class="topic-label">
-          <input
+    
+    <div class="topics-list" v-if="!isLoading">
+      <div 
+        v-for="topic in topics" 
+        :key="topic"
+        class="topic-item"
+      >
+        <label>
+          <input 
             type="checkbox"
             :value="topic"
             v-model="selectedTopics"
-          />
+            @change="handleTopicChange"
+          >
           {{ topic }}
         </label>
-      </template>
+      </div>
     </div>
-
-    <div class="button-group">
-      <button @click="clearSelection" class="repo-button repo-button-secondary">
-        清空选择
-      </button>
-      <button @click="handleFilter" class="repo-button repo-button-primary">
-        筛选仓库
-      </button>
+    <div v-else class="loading">
+      Loading topics...
     </div>
   </div>
 </template>
@@ -46,7 +46,7 @@ import { ref, watch } from 'vue'
 
 const props = defineProps<{
   topics: string[]
-  isLoading?: boolean
+  isLoading: boolean
 }>()
 
 const emit = defineEmits<{
@@ -54,186 +54,70 @@ const emit = defineEmits<{
 }>()
 
 const selectedTopics = ref<string[]>([])
-const filterMode = ref<'any' | 'all'>('any')
+const mode = ref<'any' | 'all'>('any')
 
-const handleFilter = () => {
-  if (selectedTopics.value.length === 0) return
-  emit('filter', selectedTopics.value, filterMode.value)
+const handleTopicChange = () => {
+  emit('filter', selectedTopics.value, mode.value)
 }
 
-const clearSelection = () => {
-  selectedTopics.value = []
-}
-
-// Reset selected topics when topics prop changes
-watch(() => props.topics, () => {
-  selectedTopics.value = []
+watch(mode, () => {
+  emit('filter', selectedTopics.value, mode.value)
 })
 </script>
 
 <style scoped>
 .repo-filters {
-  margin-top: var(--spacing-lg);
-  padding: 24px;
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  background: var(--color-bg-secondary);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
 }
 
 .filter-mode {
   display: flex;
-  gap: 24px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  gap: var(--spacing-sm);
 }
 
-.filter-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.filter-mode button {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  border-radius: var(--border-radius);
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  color: #4b5563;
 }
 
-.filter-label:hover {
-  background-color: #f3f4f6;
-}
-
-.filter-label input[type="radio"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #2563eb;
-}
-
-.topics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.topic-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  color: #4b5563;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  height: 36px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.topic-label:hover {
-  background-color: #f3f4f6;
-  border-color: #d1d5db;
-}
-
-.topic-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #2563eb;
-}
-
-.button-group {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.repo-button {
-  flex: 1;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  text-align: center;
-}
-
-.repo-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.repo-button:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.repo-button-primary {
-  background-color: #2563eb;
+.filter-mode button.active {
+  background: var(--color-primary);
   color: white;
-  border: none;
+  border-color: var(--color-primary);
 }
 
-.repo-button-primary:hover {
-  background-color: #1d4ed8;
+.topics-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-sm);
 }
 
-.repo-button-secondary {
-  background-color: #f3f4f6;
-  color: #4b5563;
-  border: 1px solid #e5e7eb;
+.topic-item {
+  padding: var(--spacing-xs);
 }
 
-.repo-button-secondary:hover {
-  background-color: #e5e7eb;
-}
-
-@media (max-width: 768px) {
-  .repo-filters {
-    padding: 16px;
-  }
-
-  .filter-mode {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .topics-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  }
-
-  .button-group {
-    flex-direction: column;
-  }
-}
-
-.loading-placeholder {
-  grid-column: 1 / -1;
+.topic-item label {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 40px;
-  color: #6b7280;
-  gap: 16px;
+  gap: var(--spacing-xs);
+  cursor: pointer;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #2563eb;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.loading {
+  text-align: center;
+  padding: var(--spacing-md);
+  color: var(--color-text-secondary);
 }
 </style> 
