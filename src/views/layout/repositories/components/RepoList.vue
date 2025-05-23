@@ -15,6 +15,13 @@
           </h3>
           <p class="repo-description">{{ repo.description || '无描述' }}</p>
         </header>
+        <footer class="repo-footer">
+          <div class="repo-topics">
+            <span v-for="topic in repo.topics" :key="topic" class="repo-topic">
+              {{ topic }}
+            </span>
+          </div>
+        </footer>
         <div class="repo-stats">
           <div class="repo-stat">
             <span class="stat-icon">⭐</span>
@@ -28,18 +35,11 @@
             <span class="stat-icon">🍴</span>
             <span>{{ repo.forks_count || 0 }}</span>
           </div>
+          <div class="repo-stat repo-created" title="创建时间">
+            <span class="created-icon">🕒</span>
+            <span>{{ formatDate(repo.created_at) }}</span>
+          </div>
         </div>
-        <footer class="repo-footer">
-          <div class="repo-language">
-            <span class="language-dot"></span>
-            <span>{{ repo.language || 'Unknown' }}</span>
-          </div>
-          <div class="repo-topics">
-            <span v-for="topic in repo.topics" :key="topic" class="repo-topic">
-              {{ topic }}
-            </span>
-          </div>
-        </footer>
       </div>
     </template>
     <template v-else>
@@ -57,6 +57,16 @@ defineProps<{
   repos: RepoWithTopics[]
   isLoading?: boolean
 }>()
+
+const formatDate = (dateStr: string | null | undefined) => {
+  if (!dateStr) return '未知时间'
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
 
 const openRepo = (url: string | null | undefined) => {
   if (url) {
@@ -80,6 +90,8 @@ const openRepo = (url: string | null | undefined) => {
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
 }
 
 .repo-card:hover {
@@ -88,7 +100,7 @@ const openRepo = (url: string | null | undefined) => {
 }
 
 .repo-header {
-  padding: 1.5rem;
+  padding: 1rem;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -96,7 +108,7 @@ const openRepo = (url: string | null | undefined) => {
   font-size: 1.25rem;
   font-weight: 600;
   color: #334155;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   line-height: 1.4;
   cursor: pointer;
   display: flex;
@@ -128,16 +140,51 @@ const openRepo = (url: string | null | undefined) => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.repo-footer {
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.repo-topics {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.repo-topic {
+  background-color: rgba(59, 130, 246, 0.08);
+  color: #3b82f6;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.repo-topic:hover {
+  background-color: rgba(59, 130, 246, 0.12);
+  transform: translateY(-1px);
 }
 
 .repo-stats {
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   display: flex;
   gap: 1.25rem;
   color: #64748b;
   font-size: 0.875rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-top: 1px solid #e2e8f0;
   background-color: #f1f5f9;
+  flex-wrap: wrap;
+  margin-top: auto;
 }
 
 .repo-stat {
@@ -151,54 +198,14 @@ const openRepo = (url: string | null | undefined) => {
   transform: scale(1.05);
 }
 
-.stat-icon {
+.stat-icon, .created-icon {
   font-size: 1rem;
   opacity: 0.8;
 }
 
-.repo-footer {
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.repo-language {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #64748b;
-  font-size: 0.875rem;
-}
-
-.language-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
-.repo-topics {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.repo-topic {
-  background-color: rgba(59, 130, 246, 0.08);
-  color: #3b82f6;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.repo-topic:hover {
-  background-color: rgba(59, 130, 246, 0.12);
-  transform: translateY(-1px);
+.repo-created {
+  margin-left: auto;
+  cursor: help;
 }
 
 .loading-placeholder {

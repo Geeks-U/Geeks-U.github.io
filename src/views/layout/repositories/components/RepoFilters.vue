@@ -63,6 +63,7 @@ const handleFilter = () => {
 
 const clearSelection = () => {
   selectedTopics.value = []
+  emit('filter', [], filterMode.value)
 }
 
 // Reset selected topics when topics prop changes

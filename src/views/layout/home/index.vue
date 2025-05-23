@@ -1,10 +1,17 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { fetchUserInfo, type UserInfo } from '@/services/user'
+import { fetchAllRepos, fetchRepoTopics } from '@/services/repositories'
 import ProfileCard from './components/ProfileCard.vue'
 import SkillsSection from './components/SkillsSection.vue'
 import TopicsSection from './components/TopicsSection.vue'
 import ContactSection from './components/ContactSection.vue'
+
+interface TopicStats {
+  name: string
+  count: number
+  percentage: number
+}
 
 interface ContactInfo {
   name: string
@@ -12,11 +19,8 @@ interface ContactInfo {
   url: string
 }
 
-interface TopicStats {
-  name: string
-  count: number
-  percentage: number
-}
+const loading = ref(true)
+const error = ref('')
 
 const userInfo = ref<UserInfo>({
   login: '',
@@ -31,10 +35,6 @@ const userInfo = ref<UserInfo>({
   twitter_username: ''
 })
 
-const loading = ref(true)
-const error = ref('')
-const topicStats = ref<TopicStats[]>([])
-
 // 技能列表
 const skills = ref([
   { name: 'Vue.js', level: 90, icon: '🎯' },
@@ -45,24 +45,39 @@ const skills = ref([
   { name: 'Git', level: 90, icon: '📦' }
 ])
 
+const topicStats = ref<TopicStats[]>([])
+
 // 联系方式
 const contactInfo = ref<ContactInfo[]>([
   { name: 'Email', icon: '📧', url: 'mailto:cncdre11@outlook.com' }
 ])
 
-const fetchUserData = async () => {
+// 获取用户基本信息
+const fetchProfileData = async () => {
   try {
     const data = await fetchUserInfo()
     userInfo.value = data
-    // 获取用户的仓库数据
-    const response = await fetch(`https://api.github.com/users/${data.login}/repos`)
-    const repos = await response.json()
-    
-    // 统计 topics
+  } catch (err) {
+    throw new Error('Failed to fetch profile data')
+  }
+}
+
+// 获取仓库 topics 统计
+const fetchTopicsData = async () => {
+  try {
+    const repos = await fetchAllRepos()
     const topicCount: Record<string, number> = {}
     let totalTopics = 0
     
-    repos.forEach((repo: any) => {
+    // 获取每个仓库的 topics
+    const reposWithTopics = await Promise.all(
+      repos.map(async (repo) => {
+        const topics = await fetchRepoTopics(repo.name)
+        return { ...repo, topics }
+      })
+    )
+    
+    reposWithTopics.forEach((repo) => {
       if (repo.topics) {
         repo.topics.forEach((topic: string) => {
           topicCount[topic] = (topicCount[topic] || 0) + 1
@@ -80,16 +95,30 @@ const fetchUserData = async () => {
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10) // 只显示前10个最常用的topics
-    
-    loading.value = false
   } catch (err) {
-    error.value = 'Failed to fetch user data'
+    throw new Error('Failed to fetch topics data')
+  }
+}
+
+// 初始化所有数据
+const initializeData = async () => {
+  loading.value = true
+  error.value = ''
+  
+  try {
+    await Promise.all([
+      fetchProfileData(),
+      fetchTopicsData()
+    ])
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to fetch data'
+  } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
-  fetchUserData()
+  initializeData()
 })
 </script>
 

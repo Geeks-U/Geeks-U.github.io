@@ -75,7 +75,8 @@ type RepoWithTopics = Repo & {
   watchers_count?: number,
   forks_count?: number,
   language?: string | null,
-  html_url?: string | null
+  html_url?: string | null,
+  created_at?: string | null
 };
 
 // 根据所有 topics 匹配仓库，不接受 username 参数，内部用 USERNAME
