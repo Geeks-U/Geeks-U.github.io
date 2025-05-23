@@ -8,6 +8,12 @@ interface ContactInfo {
   url: string
 }
 
+interface TopicStats {
+  name: string
+  count: number
+  percentage: number
+}
+
 const userInfo = ref<UserInfo>({
   login: '',
   avatar_url: '',
@@ -23,6 +29,7 @@ const userInfo = ref<UserInfo>({
 
 const loading = ref(true)
 const error = ref('')
+const topicStats = ref<TopicStats[]>([])
 
 // 技能列表
 const skills = ref([
@@ -36,15 +43,40 @@ const skills = ref([
 
 // 联系方式
 const contactInfo = ref<ContactInfo[]>([
-  { name: 'Email', icon: '📧', url: 'mailto:cncdre11@outlook.com' },
-  { name: 'GitHub', icon: '🐙', url: 'https://github.com/Geeks-U' }
+  { name: 'Email', icon: '📧', url: 'mailto:cncdre11@outlook.com' }
 ])
 
 const fetchUserData = async () => {
   try {
     const data = await fetchUserInfo()
-    console.log(data)
     userInfo.value = data
+    // 获取用户的仓库数据
+    const response = await fetch(`https://api.github.com/users/${data.login}/repos`)
+    const repos = await response.json()
+    
+    // 统计 topics
+    const topicCount: Record<string, number> = {}
+    let totalTopics = 0
+    
+    repos.forEach((repo: any) => {
+      if (repo.topics) {
+        repo.topics.forEach((topic: string) => {
+          topicCount[topic] = (topicCount[topic] || 0) + 1
+          totalTopics++
+        })
+      }
+    })
+    
+    // 转换为数组并计算百分比
+    topicStats.value = Object.entries(topicCount)
+      .map(([name, count]) => ({
+        name,
+        count,
+        percentage: Math.round((count / totalTopics) * 100)
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10) // 只显示前10个最常用的topics
+    
     loading.value = false
   } catch (err) {
     error.value = 'Failed to fetch user data'
@@ -102,6 +134,23 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Topics Statistics -->
+      <div class="topics-section">
+        <h2>Repository Topics</h2>
+        <div class="topics-grid">
+          <div v-for="topic in topicStats" :key="topic.name" class="topic-item">
+            <div class="topic-header">
+              <span class="topic-name">{{ topic.name }}</span>
+              <span class="topic-count">{{ topic.count }} repos</span>
+            </div>
+            <div class="topic-bar">
+              <div class="topic-level" :style="{ width: `${topic.percentage}%` }"></div>
+            </div>
+            <div class="topic-percentage">{{ topic.percentage }}%</div>
+          </div>
+        </div>
+      </div>
+
       <!-- 联系方式 -->
       <div class="contact-section">
         <h2>Contact Me</h2>
@@ -126,34 +175,36 @@ onMounted(() => {
   margin: 0 auto;
   padding: 2rem;
   min-height: 100vh;
-  background: #f8f9fa;
+  background: #f1f5f9;
 }
 
 .loading, .error {
   text-align: center;
   padding: 3rem;
   font-size: 1.2rem;
-  color: #6c757d;
-  background: #fff;
+  color: #64748b;
+  background: #f8fafc;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .error {
-  color: #dc3545;
+  color: #ef4444;
 }
 
 .profile-card {
-  background: #fff;
+  background: #f8fafc;
   border-radius: 16px;
   padding: 2.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   margin-bottom: 2rem;
   transition: transform 0.3s ease;
+  border: 1px solid #e2e8f0;
 }
 
 .profile-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
 }
 
 .profile-header {
@@ -176,20 +227,20 @@ onMounted(() => {
   height: 180px;
   border-radius: 50%;
   object-fit: cover;
-  border: 5px solid #fff;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 5px solid #f8fafc;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .profile-info h1 {
   margin: 0;
   font-size: 2.5rem;
-  color: #1a1a1a;
+  color: #334155;
   font-weight: 700;
   letter-spacing: -0.5px;
 }
 
 .bio {
-  color: #4a4a4a;
+  color: #475569;
   margin: 1rem 0;
   font-size: 1.2rem;
   line-height: 1.6;
@@ -197,136 +248,162 @@ onMounted(() => {
 }
 
 .location {
-  color: #666;
+  color: #64748b;
   margin: 0.8rem 0;
   font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .stats {
   display: flex;
-  gap: 2rem;
-  margin-top: 1.5rem;
+  gap: 1.5rem;
+  margin-top: 1rem;
 }
 
 .stats span {
-  color: #666;
+  color: #475569;
   font-size: 1.1rem;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
 }
 
-.skills-section, .contact-section {
-  background: #fff;
+.skills-section, .topics-section, .contact-section {
+  background: #f8fafc;
   border-radius: 16px;
-  padding: 2.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
   margin-bottom: 2rem;
-  transition: transform 0.3s ease;
-}
-
-.skills-section:hover, .contact-section:hover {
-  transform: translateY(-5px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
 }
 
 h2 {
-  color: #1a1a1a;
-  margin-bottom: 2rem;
+  color: #334155;
   font-size: 1.8rem;
-  font-weight: 700;
-  position: relative;
-  padding-bottom: 0.8rem;
-}
-
-h2::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 60px;
-  height: 4px;
-  background: #2ea44f;
-  border-radius: 2px;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
 
 .skills-grid {
   display: grid;
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
 }
 
 .skill-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
+  background: #f1f5f9;
+  padding: 1.2rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
 
 .skill-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
 }
 
 .skill-icon {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
 }
 
 .skill-name {
-  font-weight: 600;
-  color: #1a1a1a;
   font-size: 1.1rem;
+  color: #334155;
+  font-weight: 500;
 }
 
 .skill-bar {
-  height: 10px;
-  background: #f0f0f0;
-  border-radius: 5px;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .skill-level {
   height: 100%;
-  background: linear-gradient(90deg, #2ea44f, #3fb950);
-  border-radius: 5px;
-  transition: width 0.6s ease;
+  background: #3b82f6;
+  border-radius: 4px;
+  transition: width 0.3s ease;
 }
 
-.contact-grid {
+.topics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
 }
 
+.topic-item {
+  background: #f1f5f9;
+  padding: 1.2rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.topic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.topic-name {
+  color: #334155;
+  font-weight: 500;
+}
+
+.topic-count {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.topic-bar {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.topic-level {
+  height: 100%;
+  background: #3b82f6;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.topic-percentage {
+  color: #64748b;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
 .contact-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.2rem;
-  background: #f8f9fa;
+  gap: 0.8rem;
+  padding: 1rem;
+  background: #f1f5f9;
   border-radius: 12px;
-  text-decoration: none;
-  color: #1a1a1a;
-  transition: all 0.3s ease;
-  border: 1px solid #eee;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
 }
 
 .contact-item:hover {
-  background: #fff;
-  transform: translateY(-3px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border-color: #2ea44f;
+  background: #e2e8f0;
+  transform: translateY(-2px);
 }
 
 .contact-icon {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
 }
 
 .contact-name {
-  font-weight: 600;
-  font-size: 1.1rem;
+  color: #334155;
+  font-weight: 500;
 }
 
 @media (max-width: 768px) {
@@ -337,11 +414,20 @@ h2::after {
   .profile-header {
     flex-direction: column;
     text-align: center;
-    gap: 2rem;
+    gap: 1.5rem;
+  }
+
+  .avatar {
+    width: 150px;
+    height: 150px;
   }
 
   .profile-info h1 {
     font-size: 2rem;
+  }
+
+  .skills-grid, .topics-grid {
+    grid-template-columns: 1fr;
   }
 
   .stats {
@@ -353,7 +439,7 @@ h2::after {
     grid-template-columns: 1fr;
   }
 
-  .skills-section, .contact-section {
+  .skills-section, .contact-section, .topics-section {
     padding: 1.5rem;
   }
 }

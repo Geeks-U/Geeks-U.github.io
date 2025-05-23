@@ -31,7 +31,6 @@ export const fetchUserInfo = async (): Promise<UserInfo> => {
 
   try {
     const { data } = await githubAxios.get<UserInfo>(`users/${USERNAME}`);
-    console.log('Fetched user data:', data);
     userInfoCache.set(cacheKey, { timestamp: now, data });
     return data;
   } catch (error) {
